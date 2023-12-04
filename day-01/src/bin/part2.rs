@@ -1,3 +1,4 @@
+#[cfg(not(test))]
 fn main() {
     let input = include_str!("../../assets/input.txt");
     dbg!(part2(input));

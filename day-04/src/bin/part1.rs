@@ -1,7 +1,7 @@
-#![feature(test)]
-extern crate test;
+#![cfg_attr(feature = "unstable", feature(test))]
 use std::collections::HashSet;
 
+#[cfg(not(test))]
 fn main() {
     let input = include_str!("../../assets/input.txt").trim();
     dbg!(part1(input));
@@ -28,12 +28,19 @@ fn part1(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::Bencher;
     #[test]
     fn test_input() {
         let input = include_str!("../../assets/test.txt").trim();
         assert_eq!(part1(input), "13");
     }
+}
+
+#[cfg(all(feature = "unstable", test))]
+mod bench {
+    use super::*;
+    extern crate test;
+    use self::test::Bencher;
+
     #[bench]
     fn bench_main(b: &mut Bencher) {
         b.iter(|| {
