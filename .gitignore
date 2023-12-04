@@ -1,0 +1,4 @@
+#Rust generated files
+target/
+# AOC input (should stay hidden)
+**/assets/input.txt
