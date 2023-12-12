@@ -10,18 +10,12 @@ fn main() {
 
 
 fn fit_group(gears: &str, group_size : usize) -> bool {
-    if gears.len() >= group_size {
-        let group = &gears[..group_size];
-        group.chars().filter(|c| *c == ' ').count() == 0 &&
-            gears.chars().nth(group_size).unwrap_or(' ') != '#'
-    }
-    else
-    {
-        false
-    }
+    gears.len() >= group_size &&
+        (&gears[..group_size]).chars().filter(|c| *c == '.').count() == 0 &&
+            gears.chars().nth(group_size).map_or(true, |c| c != '#')
 }
 
-fn num_working<'a>(gears: &'a str, groups: &'a [i32], cache : &mut HashMap<(&'a str, &'a [i32]), u128>) -> u128 {
+fn num_working<'a>(gears: &'a str, groups: &'a [i32], cache : &mut HashMap<(&'a str, &'a [i32]), u128>, free_spaces: Option<i32>) -> u128 {
     // check if the previous alignment works
     // empty group can only fit into "empty" space
     // all '?' become ' '
@@ -32,9 +26,16 @@ fn num_working<'a>(gears: &'a str, groups: &'a [i32], cache : &mut HashMap<(&'a 
             1
         }
     }
-    let blocked_spaces = groups.iter().map(|v| v + 1).sum::<i32>() - 1;
-    let free_spaces = gears.len() as i32 - blocked_spaces;
     // we cant work with negative spaces. the previous alignment is invalid
+    let free_spaces = if let Some(free) = free_spaces
+    {
+        free
+    }
+    else
+    {
+        let blocked_spaces = groups.iter().map(|v| v + 1).sum::<i32>() - 1;
+        gears.len() as i32 - blocked_spaces
+    };
     if free_spaces < 0
     {
         return 0;
@@ -50,14 +51,14 @@ fn num_working<'a>(gears: &'a str, groups: &'a [i32], cache : &mut HashMap<(&'a 
                     count += v;
                 } else
                 {
-                    let result = num_working(&gears[(offset + groups[0] as usize + 1)..], &groups[1..], cache);
+                    let result = num_working(&gears[(offset + groups[0] as usize + 1)..], &groups[1..], cache, Some(free_spaces - offset as i32));
                     cache.insert((&gears[(offset + groups[0] as usize + 1)..], &groups[1..]), result);
                     count += result;
                 }
             }
         }
         // if the current first character is a '#' we have no other option as to start a group
-        if gears.chars().nth(offset).unwrap_or(' ') == '#' {
+        if gears.chars().nth(offset).map_or(false, |c| c == '#') {
             break;
         }
     }
@@ -69,7 +70,7 @@ fn part2(input: &str) -> String {
     let lines = input.lines();
     let gear_groups = lines.map(|l| {
         let mut it = l.split_ascii_whitespace();
-        let mut gears = it.next().unwrap().replace('.', " ");
+        let mut gears = it.next().unwrap().to_string();
         gears.push('?');
         let mut gears = gears.repeat(5);
         gears.pop();
@@ -79,7 +80,7 @@ fn part2(input: &str) -> String {
     }).collect::<Vec<_>>();
 
     let result = gear_groups.iter().map(|(gears, groups)| {
-        num_working(gears, groups, &mut HashMap::new())
+        num_working(gears, groups, &mut HashMap::new(), None)
     }).sum::<u128>();
 
     result.to_string()
@@ -102,7 +103,7 @@ mod bench {
     use self::test::Bencher;
 
     #[bench]
-    fn bench_main(b: &mut Bencher) {
+    fn bench_part2(b: &mut Bencher) {
         let input = test::black_box(include_str!("../../assets/input.txt").trim());
         b.iter(move || {
             //std::thread::sleep(std::time::Duration::from_nanos(1000));

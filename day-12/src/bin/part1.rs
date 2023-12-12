@@ -65,7 +65,7 @@ mod bench {
     use self::test::Bencher;
 
     #[bench]
-    fn bench_main(b: &mut Bencher) {
+    fn bench_part1(b: &mut Bencher) {
         b.iter(|| {
             let input = test::black_box(include_str!("../../assets/input.txt").trim());
             let _ = part1(input);
