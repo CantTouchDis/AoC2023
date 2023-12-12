@@ -68,7 +68,7 @@ mod bench {
         let input = test::black_box(include_str!("../../assets/input.txt").trim());
         b.iter(move || {
             //std::thread::sleep(std::time::Duration::from_nanos(1000));
-            let _ = part2(input);
+            let _ = part2(input, 1000000);
         });
     }
 }
