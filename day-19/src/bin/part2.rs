@@ -22,7 +22,7 @@ fn accumulate_acceptance(current: &str, value_ranges: &HashMap<&str, (i32, i32)>
     else if current == "A" {
         //println!("Accepting Ranges: {value_ranges:?}");
         return value_ranges.values().map(|(a, b)| {
-            assert!(a < b);
+            assert!(a <= b);
             (b - a + 1) as u64
         }).product::<u64>();
     }
@@ -32,29 +32,27 @@ fn accumulate_acceptance(current: &str, value_ranges: &HashMap<&str, (i32, i32)>
         for rule in next_rules {
             match rule {
                 Condition::LT(val, part, next) => {
-                    let values = value_ranges.get(part).unwrap();
-                    // if we dont intersect the range just skip
-                    if values.0 < *val {
-                        new_values.insert(part, (values.0, std::cmp::min(values.1, *val - 1)));
-                        sum_values += accumulate_acceptance(next, &new_values, workflows);
-                        assert!(*val < values.1);
-                        new_values.insert(part, (*val, values.1));
-                    }
+                    let values = *new_values.get(part).unwrap();
                     if values.1 < *val {
+                        sum_values += accumulate_acceptance(next, &new_values, workflows);
                         break;
+                    }
+                    else if values.0 < *val {
+                        new_values.insert(part, (values.0, *val - 1));
+                        sum_values += accumulate_acceptance(next, &new_values, workflows);
+                        new_values.insert(part, (*val, values.1));
                     }
                 },
                 Condition::GT(val, part, next) => {
-                    let values = value_ranges.get(part).unwrap();
-                    // if we dont intersect the range just skip
-                    if values.1 > *val {
-                        new_values.insert(part, (std::cmp::max(values.0, *val + 1), values.1));
-                        sum_values += accumulate_acceptance(next, &new_values, workflows);
-                        assert!(values.0 < *val);
-                        new_values.insert(part, (values.0, *val));
-                    }
+                    let values = *new_values.get(part).unwrap();
                     if values.0 > *val {
+                        sum_values += accumulate_acceptance(next, &new_values, workflows);
                         break;
+                    }
+                    else if values.1 > *val {
+                        new_values.insert(part, (*val + 1, values.1));
+                        sum_values += accumulate_acceptance(next, &new_values, workflows);
+                        new_values.insert(part, (values.0, *val));
                     }
                 },
                 Condition::ALWAYS(next) => {
@@ -65,8 +63,7 @@ fn accumulate_acceptance(current: &str, value_ranges: &HashMap<&str, (i32, i32)>
         }
         return sum_values;
     }
-    todo!();
-    return 0;
+    panic!();
 }
 
 fn part2(input: &str) -> String {
@@ -97,7 +94,6 @@ fn part2(input: &str) -> String {
 
         (name, rules)
     }).collect::<HashMap<&str, _>>();
-    //println!("{workflows:?}");
     // go through the workflows and keep track of a equation
     let ranges : HashMap<&str, (i32, i32)> = HashMap::from([
       ("x", (1,4000)),
@@ -105,8 +101,6 @@ fn part2(input: &str) -> String {
       ("a", (1,4000)),
       ("s", (1,4000)),
     ]);
-    let x = 4000 as u64;
-    let x = x * x * x * x;
     accumulate_acceptance("in", &ranges, &workflows).to_string()
 }
 

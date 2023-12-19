@@ -44,7 +44,6 @@ fn part1(input: &str) -> String {
 
         (name, rules)
     }).collect::<HashMap<&str, _>>();
-    println!("{workflows:?}");
     lines_it.map(|l| {
         let l = &l[1..(l.len()-1)];
         let parts = l.split_terminator(',').map(|v| {
@@ -73,7 +72,6 @@ fn part1(input: &str) -> String {
                 };
             }
         }
-        println!("{parts:?} => {current}");
         if current == "R" {
             0
         }
